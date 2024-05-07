@@ -44,7 +44,7 @@ class User(AbstractUser):
 
 
 class UserDocuments(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='documents')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='documents', null=True)
     file_extension_validator = FileExtensionValidator(allowed_extensions=['pdf'],
                                                       message='Выберите файл в формате PDF')
 
