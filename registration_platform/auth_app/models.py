@@ -27,6 +27,7 @@ class User(AbstractUser):
     avatar = models.ImageField(verbose_name='Фото', blank=True,
                                upload_to=UserMediaSubPath(sub_path='', file_basename='avatar'),
                                validators=[avatar_extension_validator])
+    # TODO documents status
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
