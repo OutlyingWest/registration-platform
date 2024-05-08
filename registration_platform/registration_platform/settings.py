@@ -57,7 +57,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / 'templates',
+            BASE_DIR / 'registration_platform/templates',
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -130,9 +130,9 @@ SHORT_DATETIME_FORMAT = 'j.m.Y H:I'
 STATIC_ROOT = BASE_DIR / 'static'
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
-    BASE_DIR / 'static/img',
-    BASE_DIR / 'static/styles',
-    BASE_DIR / 'static/scripts',
+    BASE_DIR / 'registration_platform/static/img',
+    BASE_DIR / 'registration_platform/static/styles',
+    BASE_DIR / 'registration_platform/static/scripts',
 ]
 
 # Media files
