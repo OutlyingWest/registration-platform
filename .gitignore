@@ -112,11 +112,12 @@ media/
 
 
 # Ignore static
-learning_platform/static/admin/
-learning_platform/static/errors/
-learning_platform/static/*.png
-learning_platform/static/*.js
-learning_platform/static/*.css
+registration_platform/static/admin/
+registration_platform/static/errors/
+registration_platform/static/img/*
+registration_platform/static/*.png
+registration_platform/static/*.js
+registration_platform/static/*.css
 
 # Ignore gunicorn config
 config/
