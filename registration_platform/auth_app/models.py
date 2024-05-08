@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.db import models
 
-from auth.utilities import UserMediaSubPath
+from .utilities import UserMediaSubPath
 
 
 class User(AbstractUser):
