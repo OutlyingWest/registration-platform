@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Codeby - {% block title %}Онлайн курсы{% endblock %}</title>
+    <title>Reg. platform - {% block title %}Соша Жукова{% endblock %}</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"
             integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2"
@@ -25,7 +25,7 @@
                         <h2 translate="no">Registration</h2>
                     </div>
                     <div class="role">
-                        Онлайн-курсы
+                        Регистрация на экзамены
                     </div>
                 </div>
             </div>
@@ -69,9 +69,11 @@
                             </div>
                         </div>
                     </div>
-                    <div>
-                        <a href="{% url 'create' %}">Создать курс</a>
-                    </div>
+                    {% if user.is_staff %}
+                        <div>
+                            <a href="{% url 'create' %}">Создать курс</a>
+                        </div>
+                    {% endif %}
                 {% else %}
                     <div class="nav-toggle"><span></span></div>
                     <div class="login">
