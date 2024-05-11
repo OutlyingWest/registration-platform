@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Custom apps
     'auth_app.apps.AuthAppConfig',
+    'verification.apps.VerificationConfig',
+    'enrollment.apps.EnrollmentConfig',
 ]
 
 MIDDLEWARE = [
@@ -57,7 +59,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / 'registration_platform/templates',
+            BASE_DIR / 'templates',
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -130,9 +132,9 @@ SHORT_DATETIME_FORMAT = 'j.m.Y H:I'
 STATIC_ROOT = BASE_DIR / 'static'
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
-    BASE_DIR / 'registration_platform/static/img',
-    BASE_DIR / 'registration_platform/static/styles',
-    BASE_DIR / 'registration_platform/static/scripts',
+    BASE_DIR / 'static/img',
+    BASE_DIR / 'static/styles',
+    BASE_DIR / 'static/scripts',
 ]
 
 # Media files
