@@ -22,8 +22,8 @@ class UserDocument(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='documents')
     document_name = models.CharField(max_length=100, choices=DOCUMENT_TYPES, verbose_name="Тип документа")
     status = models.CharField(max_length=20, default='not_uploaded', choices=[
-        ('not_uploaded', 'Не загуржен'),
-        ('in_progress', 'В обрабтке'),
+        ('not_uploaded', 'Не загружен'),
+        ('in_progress', 'В обработке'),
         ('verification_failed', 'Проверка не пройдена'),
         ('approved', 'Одобрен'),
     ], verbose_name="Статус")
