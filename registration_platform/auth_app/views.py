@@ -4,17 +4,20 @@ from django.contrib import auth
 from django.http import HttpResponse
 from django.views.generic.edit import CreateView
 
+from .forms import RegisterForm
+
 
 class UserLoginView(LoginView):
     template_name = 'login.html'
     next_page = 'index'
 
     def form_valid(self, form):
-        # Email log in alert message sending will be here
+        # TODO Email log in alert message sending will be here
         return super(UserLoginView, self).form_valid(form)
 
 
 class UserRegisterView(CreateView):
+    form_class = RegisterForm
     template_name = 'register.html'
 
     def form_valid(self, form):

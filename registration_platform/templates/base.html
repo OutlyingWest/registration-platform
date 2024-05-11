@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Reg. platform - {% block title %}Соша Жукова{% endblock %}</title>
+    <title>Sosha Zhuk. - {% block title %}Регистрация на экзамены{% endblock %}</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"
             integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2"
@@ -38,28 +38,21 @@
                         <div class="submenu_profile" style="display: none;">
                             <div>
                                 <p>
-                                    <a style="color:rgba(33,73,173,0.69)"
-                                       class="fa fa-heart"
-                                       href="{% url 'favorites' %}">
-                                        Избранное
-                                    </a>
-                                </p>
-                                <p>
                                     <a style="color:rgba(138,33,173,0.69)"
                                        class="fa fa-tasks"
-                                       href="{% url 'tracking' %}">
-                                        Ваш трек
+                                       href="#">
+                                        Ваши экзамены
                                     </a>
                                 </p>
                                 <p>
                                     <a style="color:rgba(33,73,173,0.69)"
-                                       href="{% url 'settings' %}">
+                                       href="#">
                                         Настройки
                                     </a>
                                 </p>
                                 <p>
                                     <a style="color:rgba(33,73,173,0.69)"
-                                       href="{% url 'password_change' %}">
+                                       href="#">
                                         Изменить пароль
                                     </a>
                                 </p>
@@ -71,7 +64,7 @@
                     </div>
                     {% if user.is_staff %}
                         <div>
-                            <a href="{% url 'create' %}">Создать курс</a>
+                            <a href="#">Создать новывй экзамен</a>
                         </div>
                     {% endif %}
                 {% else %}
@@ -95,7 +88,7 @@
                 <div class="copyright-mark">
                     <p>
                         <img src="{% static 'logo.png' %}" alt="site logo" title="Лого сайта">
-                        <span class="title">Codeby</span> - онлайн-курсы
+                        <span class="title">Sosha Zhuk.</span> - Регистрация на экзамены
                     </p>
                     <div>
                         &copy; {{ current_year }} Все права защищены
