@@ -12,3 +12,11 @@ class UserMediaSubPath:
         user_id = str(instance.user.id)
         extension = filename.split('.')[-1]
         return os.path.join('users', user_id, self.sub_path, self.file_basename, extension)
+
+
+def document_path(instance, filename):
+    user_id = str(instance.user.id)
+    extension = filename.split('.')[-1]
+    file_basename = str(instance.document_name)
+    return os.path.join('users', user_id, 'documents', file_basename, extension)
+
