@@ -1,9 +1,8 @@
 from django.core.validators import FileExtensionValidator, RegexValidator
 from django.contrib.auth.models import AbstractUser
-from django.conf import settings
 from django.db import models
 
-from .utilities import UserMediaSubPath, document_path
+from .utilities import UserMediaSubPath
 
 
 class User(AbstractUser):
