@@ -5,10 +5,6 @@ from django.http import HttpResponse
 from django.shortcuts import render
 
 
-def main_view(request):
-    return HttpResponse('Этот обработчик меняет пароль пользователя')
-
-
 class MainView(ListView):
     template_name = 'index.html'
 
