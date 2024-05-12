@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+    <div class="content">
+        <div class="account_container">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ user_profile_form.as_p }}
+                {{ user_documents_formset.management_form }}  <!-- Important for formset proceedings -->
+                {% for user_document_form in user_documents_formset %}
+                    <p>
+                        <p>
+                            {{ user_document_form.instance.get_document_name_display }}
+                        </p>
+                        <p>
+                            {{ user_document_form.file }}
+                            {{ user_document_form.instance.get_status_display }}
+                        </p>
+                    </p>
+                {% endfor %}
+                <button type="submit">Сохранить</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
