@@ -2,7 +2,7 @@ from django.core.validators import FileExtensionValidator, RegexValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from .utilities import UserMediaSubPath
+from .utilities import file_path
 
 
 class User(AbstractUser):
@@ -24,7 +24,7 @@ class User(AbstractUser):
     phone_number = models.CharField(verbose_name='Номер телефона', validators=[phone_regex_validator], max_length=17,
                                     blank=False)
     avatar = models.ImageField(verbose_name='Фото', blank=True,
-                               upload_to=UserMediaSubPath(sub_path='', file_basename='avatar'),
+                               upload_to=file_path,
                                validators=[avatar_extension_validator])
 
     USERNAME_FIELD = 'email'

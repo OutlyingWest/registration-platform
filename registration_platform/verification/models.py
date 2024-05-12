@@ -2,6 +2,8 @@ from django.conf import settings
 from django.core.validators import FileExtensionValidator
 from django.db import models
 
+from .utilities import document_path
+
 
 class UserDocument(models.Model):
     DOCUMENT_TYPES = [
@@ -27,6 +29,6 @@ class UserDocument(models.Model):
         ('verification_failed', 'Проверка не пройдена'),
         ('approved', 'Одобрен'),
     ], verbose_name="Статус")
-    file = models.FileField(upload_to='user_documents/', validators=[
+    file = models.FileField(upload_to=document_path, validators=[
         FileExtensionValidator(allowed_extensions=['pdf'], message='Выберите файл в формате PDF')
     ], verbose_name="Файл")
