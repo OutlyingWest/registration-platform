@@ -20,4 +20,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('auth_app.urls')),
     path('exams/', include('enrollment.urls')),
+    path('account/', include('verification.urls')),
 ]
