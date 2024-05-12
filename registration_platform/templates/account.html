@@ -6,7 +6,7 @@
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 {{ user_profile_form.as_p }}
-                {{ user_documents_formset.management_form }}  <!-- Important for formset proceedings -->
+                {{ user_documents_formset.management_form }}  <!-- Important for formset proceeding -->
                 {% for user_document_form in user_documents_formset %}
                     <p>
                         <p>
