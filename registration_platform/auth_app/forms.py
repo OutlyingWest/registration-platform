@@ -14,4 +14,5 @@ class RegisterForm(UserCreationForm):
             'gender',
             'birthday',
             'email',
+            'phone_number',
         )

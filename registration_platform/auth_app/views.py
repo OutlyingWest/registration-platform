@@ -23,7 +23,7 @@ class UserRegisterView(CreateView):
     def form_valid(self, form):
         user = form.save()
         auth.login(self.request, user)
-        return redirect('index')
+        return redirect('account')
 
 
 def change_password(request):
