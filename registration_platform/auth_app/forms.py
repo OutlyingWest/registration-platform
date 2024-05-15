@@ -7,7 +7,6 @@ class RegisterForm(UserCreationForm):
     class Meta:
         model = User
         fields = (
-            'avatar',
             'first_name',
             'last_name',
             'patronymic',

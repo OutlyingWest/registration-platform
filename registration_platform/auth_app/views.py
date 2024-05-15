@@ -9,7 +9,7 @@ from .forms import RegisterForm
 
 class UserLoginView(LoginView):
     template_name = 'login.html'
-    next_page = 'index'
+    next_page = 'account'
 
     def form_valid(self, form):
         # TODO Email log in alert message sending will be here

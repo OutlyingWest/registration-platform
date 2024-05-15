@@ -7,7 +7,7 @@ from .utilities import file_path
 
 class User(AbstractUser):
     phone_regex_validator = RegexValidator(regex=r'^\+?1?\d{9,15}$',
-                                           message="Номер телефона должен быть в формате: '+999999999'. "
+                                           message="Номер телефона должен быть в формате: '+99999999999'. "
                                                    "Допускается до 15 цифр.")
     avatar_extension_validator = FileExtensionValidator(allowed_extensions=['jpg', 'bmp', 'png'],
                                                         message='Выберите файл в формате jpg, bmp, png')
