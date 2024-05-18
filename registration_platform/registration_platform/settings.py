@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Other apps
+    'channels',
     # Custom apps
     'auth_app.apps.AuthAppConfig',
     'verification.apps.VerificationConfig',
@@ -74,6 +76,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'registration_platform.wsgi.application'
+ASGI_APPLICATION = 'registration_platform.asgi.application'
 
 
 # Database
