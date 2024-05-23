@@ -1,3 +1,6 @@
+import os
+
+from channels.db import database_sync_to_async
 from django.conf import settings
 from django.core.validators import FileExtensionValidator
 from django.db import models
@@ -32,3 +35,45 @@ class UserDocument(models.Model):
     file = models.FileField(upload_to=document_path, validators=[
         FileExtensionValidator(allowed_extensions=['pdf'], message='Выберите файл в формате PDF')
     ], verbose_name="Файл")
+    
+    def save(self, *args, **kwargs):
+        # Check does file already exist
+        if self.pk:
+            old_document = UserDocument.objects.get(pk=self.pk)
+            if old_document.file and old_document.file != self.file:
+                old_file_path = old_document.file.path
+                print(f'{old_file_path=}')
+                if os.path.isfile(old_file_path):
+                    os.remove(old_file_path)
+
+        super(UserDocument, self).save(*args, **kwargs)
+
+    def update_status(self, status: str) -> None:
+        self.status = status
+        self.save(update_fields=('status',))
+
+    def update_file(self, file) -> None:
+        self.file = file
+        self.save(update_fields=('file',))
+
+    @classmethod
+    @database_sync_to_async
+    def async_update_status_by_id(cls, document_id: int, status: str) -> None:
+        document = cls.objects.get(id=document_id)
+        document.update_status(status)
+
+    @classmethod
+    @database_sync_to_async
+    def async_get_status_by_id(cls, document_id: int) -> status:
+        document = cls.objects.get(id=document_id)
+        return document.status
+
+    @classmethod
+    @database_sync_to_async
+    def update_document_file_by_id(cls, document_id: int, file):
+        document = cls.objects.get(id=document_id)
+        document.update_file(file)
+        return document
+
+    def get_filename(self):
+        return os.path.basename(self.file.name)
