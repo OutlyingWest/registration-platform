@@ -17,6 +17,16 @@ class UserProfileForm(forms.ModelForm):
             'birthday',
             'email',
         )
+        widgets = {
+            'avatar': forms.FileInput(attrs={'accept': 'application/pdf'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'patronymic': forms.TextInput(attrs={'class': 'form-control'}),
+            'gender': forms.Select(attrs={'class': 'form-control'}),
+            'birthday': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.TextInput(attrs={'class': 'form-control'}),
+            # 'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+        }
 
 
 class UserDocumentForm(forms.ModelForm):
