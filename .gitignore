@@ -118,6 +118,7 @@ registration_platform/static/img/*
 registration_platform/static/*.png
 registration_platform/static/*.js
 registration_platform/static/*.css
+registration_platform/static_production
 
 # Ignore gunicorn config
 config/
