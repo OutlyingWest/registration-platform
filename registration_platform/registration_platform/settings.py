@@ -132,8 +132,8 @@ SHORT_DATETIME_FORMAT = 'j.m.Y H:I'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
-STATIC_ROOT = BASE_DIR / 'static'
-STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'static_production'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static/img',
     BASE_DIR / 'static/styles',
@@ -151,6 +151,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Use custom model instead the default
 AUTH_USER_MODEL = 'auth_app.User'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
 
 
 # Authentication control

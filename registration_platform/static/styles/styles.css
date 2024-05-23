@@ -138,15 +138,27 @@ img {
 
 .account_container {
     display: flex;
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
     justify-content: space-between;
     font-size: .6em;
     color: black;
     margin-right: 8%;
     z-index: 22;
-
+    float: left;
+    width: 100%;
 }
+
+.user_profile {
+    float: left;
+    width: 100%;
+}
+
+.user_documents {
+    margin-top: 8%;
+    float: left;
+    width: 100%;
+}
+
 
 #form_account {
   height: 100%;

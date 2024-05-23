@@ -3,23 +3,52 @@
 {% block content %}
     <div class="content">
         <div class="account_container">
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                {{ user_profile_form.as_p }}
-                {{ user_documents_formset.management_form }}  <!-- Important for formset proceeding -->
-                {% for user_document_form in user_documents_formset %}
-                    <p>
+            <div class="user_profile">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ user_profile_form.as_p }}
+                    <button type="submit">Сохранить</button>
+                </form>
+            </div>
+            <div class="user_documents">
+                {% for user_document in user_documents %}
+                    <form id="uploadDocumentForm-{{ user_document.id }}" method="post" enctype="multipart/form-data">
                         <p>
-                            {{ user_document_form.instance.get_document_name_display }}
+                            {{ user_document.get_document_name_display }}
                         </p>
                         <p>
-                            {{ user_document_form.file }}
-                            {{ user_document_form.instance.get_status_display }}
+                            Статус:
+                            <span id="status-{{ user_document.id }}">&nbsp;
+                                {{ user_document.get_status_display }}
+                            </span>
                         </p>
-                    </p>
+                        {% if user_document.file %}
+                            <p>
+                                <span style="font-size: smaller">Загружен файл: {{ user_document.get_filename }}</span>
+                            </p>
+                        {% endif %}
+                        <p>
+                            <span style="font-size: smaller">
+                                Загрузить новый файл
+                            </span>
+                            <input  class="file-upload"
+                                    type="file"
+                                    id="document-{{ user_document.id }}"
+                                    name="{{ user_document.document_name }}"
+                                    accept="application/pdf"
+                                    required>
+                        </p>
+                    </form>
                 {% endfor %}
-                <button type="submit">Сохранить</button>
-            </form>
+            </div>
         </div>
     </div>
 {% endblock %}
+
+{% block extra_js %}
+    <script>
+        window.CSRF_TOKEN = '{{ csrf_token }}';
+    </script>
+    <script defer src="{% static 'account.js' %}"></script>
+{% endblock %}
+

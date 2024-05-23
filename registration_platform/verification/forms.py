@@ -20,12 +20,6 @@ class UserProfileForm(forms.ModelForm):
 
 
 class UserDocumentForm(forms.ModelForm):
-    document_name_text = forms.CharField(
-        required=False,
-        label='',
-        widget=forms.TextInput(attrs={'readonly': True})
-    )
-
     class Meta:
         model = UserDocument
         fields = (
@@ -33,11 +27,6 @@ class UserDocumentForm(forms.ModelForm):
             'status',
             'file',
         )
-        widgets = {
-            'document_name': forms.HiddenInput(),
-            'file': forms.FileInput(attrs={'accept': 'application/pdf'}),
-            'status': forms.HiddenInput(),
-        }
 
 
 UserDocumentsFormSet = modelformset_factory(UserDocument, form=UserDocumentForm, extra=0)
