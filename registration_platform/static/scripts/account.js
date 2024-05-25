@@ -10,6 +10,26 @@ statusSocket.onmessage = function(event) {
     }
 };
 
+async function uploadFile(documentFormData) {
+    const response = await fetch('/verification/upload-document/', {
+            method: 'POST',
+            body: documentFormData
+        });
+    const document_id = documentFormData.get('document_id').split('-')[1];
+    const result = await response.json();
+    if (response.ok) {
+        console.log('File uploaded successfully', result);
+    } else {
+        console.log('Error uploading file:', result.message);
+        console.log(`status-${document_id}`)
+        let statusElement = document.getElementById(`status-${document_id}`);
+        if (statusElement) {
+            statusElement.innerText = `Error: ${result.message}`;
+        }
+    }
+}
+
+
 document.addEventListener('DOMContentLoaded', () => {
 
     const handleFileUpload = async (event) => {
@@ -24,21 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             documentFormData.append('file', file);
             documentFormData.append('csrfmiddlewaretoken', window.CSRF_TOKEN);
 
-            statusSocket.send(JSON.stringify({
-                'document_id': fileInput.id,
-            }))
-
-            // Отправка файла на сервер с помощью Fetch API
-            try {
-                const response = await fetch('/verification/upload-document/', {
-                    method: 'POST',
-                    body: documentFormData
-                });
-                const result = await response.json();
-                console.log('File uploaded successfully', result);
-            } catch (error) {
-                console.error('Error uploading file:', error);
-            }
+            uploadFile(documentFormData)
         }
     };
 
