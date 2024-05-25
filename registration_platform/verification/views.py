@@ -1,14 +1,15 @@
-import asyncio
-
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
 from django.http import JsonResponse
 
-from .forms import UserDocumentsFormSet, UserProfileForm, UserDocumentForm
+from .forms import UserProfileForm
 from .models import UserDocument
 from .services import verify_document
+from .tasks import verify_document_task
 
 
 class UserAccountView(LoginRequiredMixin, View):
@@ -36,14 +37,27 @@ class UserAccountView(LoginRequiredMixin, View):
         })
 
 
-class UserDocumentUploadView(View):
-    async def post(self, request):
-        print(f'{request.POST=}')
-        print(f'{request.FILES=}')
+class UserDocumentUploadView(LoginRequiredMixin, View):
+
+    def post(self, request):
         document_id = int(request.POST.get('document_id').split('-')[1])
         file = request.FILES.get('file')
 
-        document = await UserDocument.update_document_file_by_id(document_id, file)
-        print(f'{document=}')
-        asyncio.create_task(verify_document(document))
-        return JsonResponse({'document_id': document.id, 'new_status': 'uploaded'})
+        try:
+            self.validate_file_size(file)
+        except ValidationError as e:
+            return JsonResponse({'status': 'error', 'message': e.message}, status=400)
+
+        document = UserDocument.update_document_file_by_id(document_id, file)
+        transaction.on_commit(
+            lambda: verify_document_task.delay(document.id)
+        )
+        return JsonResponse({'status': 'success'})
+
+    @staticmethod
+    def validate_file_size(file, maxsize=10 * 2**200):
+        filesize = file.size
+        if filesize > maxsize:  # 10MB
+            raise ValidationError('Максимальный размер файла не должен превышать 10MB')
+        return file
+

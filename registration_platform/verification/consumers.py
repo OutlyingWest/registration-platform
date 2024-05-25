@@ -16,14 +16,10 @@ class DocumentStatusConsumer(AsyncWebsocketConsumer):
         pass
 
     async def receive(self, text_data=None, bytes_data=None):
-        data = json.loads(text_data)
-        document_id = int(data['document_id'].split('-')[1])
-        await UserDocument.async_update_status_by_id(document_id, 'in_progress')
-        user = self.scope['user']
-        await document_status_send(user.id, document_id, 'В обработке')
+        pass
 
     async def document_status_update(self, event):
-        print(f'{event}')
+        print(f'{event=}')
         await self.send(text_data=json.dumps({
             'document_id': event['document_id'],
             'new_status': event['new_status']

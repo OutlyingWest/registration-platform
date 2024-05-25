@@ -57,10 +57,10 @@ class UserDocument(models.Model):
         self.save(update_fields=('file',))
 
     @classmethod
-    @database_sync_to_async
-    def async_update_status_by_id(cls, document_id: int, status: str) -> None:
+    def update_status_by_id(cls, document_id: int, status: str):
         document = cls.objects.get(id=document_id)
         document.update_status(status)
+        return document
 
     @classmethod
     @database_sync_to_async
@@ -69,7 +69,6 @@ class UserDocument(models.Model):
         return document.status
 
     @classmethod
-    @database_sync_to_async
     def update_document_file_by_id(cls, document_id: int, file):
         document = cls.objects.get(id=document_id)
         document.update_file(file)
