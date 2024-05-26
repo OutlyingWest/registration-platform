@@ -152,12 +152,20 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Use custom model instead the default
 AUTH_USER_MODEL = 'auth_app.User'
 
+REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD')
+
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(f"redis://:{REDIS_PASSWORD}@127.0.0.1:6379/0")],
+        },
     },
 }
 
+
+CELERY_BROKER_URL = f'redis://:{REDIS_PASSWORD}@localhost:6379/0'
+CELERY_RESULT_BACKEND = f'redis://:{REDIS_PASSWORD}@localhost:6379/0'
 
 # Authentication control
 # If user is not logged in, redirect to 'login' url
