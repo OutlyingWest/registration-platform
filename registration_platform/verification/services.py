@@ -1,10 +1,7 @@
-import asyncio
 import time
 
 from asgiref.sync import async_to_sync
-from celery.signals import task_postrun
 from channels.layers import get_channel_layer
-from django.core.exceptions import ValidationError
 
 from .models import UserDocument
 
@@ -36,4 +33,3 @@ async def document_status_send(user_id: int, document_id: int, new_status: str, 
             'new_status': new_status
         }
     )
-

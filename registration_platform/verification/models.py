@@ -42,7 +42,6 @@ class UserDocument(models.Model):
             old_document = UserDocument.objects.get(pk=self.pk)
             if old_document.file and old_document.file != self.file:
                 old_file_path = old_document.file.path
-                print(f'{old_file_path=}')
                 if os.path.isfile(old_file_path):
                     os.remove(old_file_path)
 

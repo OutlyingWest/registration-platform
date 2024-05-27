@@ -8,7 +8,6 @@ from django.http import JsonResponse
 
 from .forms import UserProfileForm
 from .models import UserDocument
-from .services import verify_document
 from .tasks import verify_document_task
 
 
