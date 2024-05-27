@@ -12,3 +12,15 @@ def document_path(instance, filename):
         'documents',
         f'{file_basename}_{user_file_name}.{extension}'
     )
+
+
+def document_text_path(document):
+    user_id = str(document.user.id)
+    file_basename = str(document.document_name)
+    return os.path.join(
+        'media',
+        'users',
+        user_id,
+        'document_texts',
+        f'{file_basename}.txt'
+    )

@@ -1,12 +1,9 @@
-import asyncio
 import time
 
 from asgiref.sync import async_to_sync
 
 from celery import shared_task
-from channels.layers import get_channel_layer
 
-from .models import UserDocument
 from .services import document_status_send, verify_document
 
 
@@ -23,8 +20,8 @@ def long(*args, **kwargs):
 
 
 @shared_task(
-    soft_time_limit=15,
-    expires=20
+    soft_time_limit=60 * 5,
+    expires=60 * 7
 )
 def verify_document_task(*args, **kwargs):
     verify_document(*args, **kwargs)
