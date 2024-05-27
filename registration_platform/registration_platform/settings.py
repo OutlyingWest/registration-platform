@@ -199,7 +199,13 @@ LOGGING = {
         },
     },
     'handlers': {
-        'file': {
+        'info_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOGGING_DIR, 'info.log'),
+            'formatter': 'verbose'
+        },
+        'debug_file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': os.path.join(LOGGING_DIR, 'debug.log'),
@@ -224,12 +230,12 @@ LOGGING = {
         },
     },
     'root': {
-        'handlers': ['console', 'file'],
+        'handlers': ['console', 'debug_file'],
         'level': 'INFO',
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'debug_file'],
             'level': 'ERROR',
             'propagate': True,
         },
@@ -244,9 +250,14 @@ LOGGING = {
             'propagate': False,
         },
         'registration_platform': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'debug_file'],
             'level': 'DEBUG',
-            'propagate': True,
+            'propagate': False,
+        },
+        'verification': {
+            'handlers': ['console', 'debug_file', 'info_file'],
+            'level': 'DEBUG',
+            'propagate': False,
         },
     }
 }
