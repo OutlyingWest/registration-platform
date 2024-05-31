@@ -15,9 +15,10 @@ from .utilities import document_text_path
 
 def verify_document(document_id: int):
     document = update_document_status(document_id, db_status='in_progress', frontend_status='В обработке')
+    logger = logging.getLogger(__name__)
 
     # Verification process placeholder
-    recognizer = UserDocumentRecognizer(document)
+    recognizer = UserDocumentRecognizer(document, logger)
     recognizer.recognize()
 
     update_document_status(document_id, db_status='approved', frontend_status='Одобрен')
@@ -46,9 +47,9 @@ async def document_status_send(user_id: int, document_id: int, new_status: str, 
 
 
 class UserDocumentRecognizer:
-    def __init__(self, document: UserDocument):
+    def __init__(self, document: UserDocument, logger):
         self.document = document
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger
         self.logger.info(f'User: {document.user.id}.'
                          f' Document: "{document.document_name}". Recognition process is started')
         self.text_path = self.set_text_path(document)
@@ -85,6 +86,7 @@ class UserDocumentRecognizer:
             f.write(f'\n\n\n{current_page_title}\n')
             f.write(text)
 
+    @staticmethod
     def set_text_path(self, document):
         text_path = document_text_path(document)
         directory = os.path.dirname(text_path)
