@@ -1,3 +1,4 @@
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.validators import FileExtensionValidator, RegexValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -6,6 +7,7 @@ from .utilities import file_path
 
 
 class User(AbstractUser):
+    username_validator = UnicodeUsernameValidator()
     phone_regex_validator = RegexValidator(regex=r'^\+?1?\d{9,15}$',
                                            message="Номер телефона должен быть в формате: '+99999999999'. "
                                                    "Допускается до 15 цифр.")
@@ -26,6 +28,13 @@ class User(AbstractUser):
     avatar = models.ImageField(verbose_name='Фото', blank=True,
                                upload_to=file_path,
                                validators=[avatar_extension_validator])
+
+    username = models.CharField(
+        max_length=150,
+        unique=False,
+        help_text='Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.',
+        validators=[username_validator],
+    )
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
