@@ -21,13 +21,12 @@ def verify_document(document_id: int):
     document = update_document_status(document_id, db_status='in_progress', frontend_status='В обработке')
     logger = logging.getLogger(__name__)
 
-    # Verification process placeholder
     recognizer = UserDocumentRecognizer(document, logger)
     recognizer.recognize()
     document_txt_path = recognizer.text_path
     user = document.user
-    fio_status = verify_user_fio(document_txt_path, user, logger)
-    if fio_status:
+    is_user_full_name_ok = verify_user_full_name(document_txt_path, user, logger)
+    if is_user_full_name_ok:
         update_document_status(document_id, db_status='approved', frontend_status='Одобрен')
     else:
         update_document_status(document_id, db_status='verification_failed', frontend_status='Проверка не пройдена')
@@ -96,7 +95,7 @@ class UserDocumentRecognizer:
 
     def osd_rotate(self, image) -> Image:
         orientation = pytesseract.image_to_osd(image, output_type=Output.DICT)
-        rotated_image = image.rotate(-orientation["rotate"], expand=True)
+        rotated_image = image.rotate(-orientation['rotate'], expand=True)
         self.logger.debug(f'{orientation=}')
 
         orientation_rotated = pytesseract.image_to_osd(rotated_image, output_type=Output.DICT)
@@ -144,13 +143,13 @@ class UserDocumentRecognizer:
         return text_path
 
 
-def verify_user_fio(text_path, user: settings.AUTH_USER_MODEL, logger):
+def verify_user_full_name(text_path, user: settings.AUTH_USER_MODEL, logger):
     with open(text_path, 'r') as f:
         text = f.read()
-    analyzer = FioAnalyser()
+    analyzer = FullNameAnalyser()
     analysed = analyzer.analyze(text)
-    analyzer.extract_fio(analysed)
-    fio = analyzer.get_detailed_fio()
+    analyzer.extract_full_name(analysed)
+    fio = analyzer.get_detailed_full_name()
     logger.debug(f'Extracted {fio=}')
 
     name_part_statuses = {}
@@ -161,12 +160,12 @@ def verify_user_fio(text_path, user: settings.AUTH_USER_MODEL, logger):
         else:
             name_part_statuses[name_part] = False
 
-    fio_status = False
+    is_fio = False
     if all(name_part_statuses.values()):
-        fio_status = True
+        is_fio = True
     else:
         logger.debug(f'{name_part_statuses=}')
-    return fio_status
+    return is_fio
 
 
 class UserDocumentVerifier:
@@ -177,10 +176,10 @@ class UserDocumentVerifier:
         pass
 
 
-class FioAnalyser:
+class FullNameAnalyser:
     def __init__(self):
         self.analyser = Mystem()
-        self._fio = {
+        self._full_name = {
             'first_name': {'alias': 'имя', 'lexeme': None, 'confidence': 0, },
             'last_name': {'alias': 'фам', 'lexeme': None, 'confidence': 0, },
             'patronymic': {'alias': 'отч', 'lexeme': None, 'confidence': 0, },
@@ -190,7 +189,7 @@ class FioAnalyser:
         analysed = self.analyser.analyze(text)
         return analysed
 
-    def extract_fio(self, analysed: list) -> dict:
+    def extract_full_name(self, analysed: list) -> dict:
         for item in analysed:
             analyses = item.get('analysis')
             if analyses:
@@ -201,19 +200,19 @@ class FioAnalyser:
                 self.set_name_part('first_name', grammar, word, confidence)
                 self.set_name_part('last_name', grammar, word, confidence)
                 self.set_name_part('patronymic', grammar, word, confidence)
-        return self.get_simple_fio()
+        return self.get_simple_full_name()
 
     def set_name_part(self, part: str, grammar, word: str, confidence: float):
-        fio_part = self._fio[part]
+        fio_part = self._full_name[part]
         if fio_part['alias'] in grammar:
             if confidence > fio_part['confidence']:
                 fio_part['confidence'] = confidence
                 fio_part['lexeme'] = word
 
-    def get_simple_fio(self):
-        return {part: self._fio[part]['lexeme'] for part in self._fio.keys()}
+    def get_simple_full_name(self):
+        return {part: self._full_name[part]['lexeme'] for part in self._full_name.keys()}
 
-    def get_detailed_fio(self):
-        return self._fio
+    def get_detailed_full_name(self):
+        return self._full_name
 
 
