@@ -34,8 +34,9 @@ class UserDocument(models.Model):
     ], verbose_name="Статус")
     uploaded_file = models.FileField(upload_to=build_document_path, validators=[
         FileExtensionValidator(allowed_extensions=['pdf'], message='Выберите файл в формате PDF')
-    ], verbose_name="Файл")
-    extracted_text_file = models.FileField(upload_to=build_document_text_path, verbose_name='Извлеченный текст')
+    ], verbose_name="Файл", blank=True, default='')
+    extracted_text_file = models.FileField(upload_to=build_document_text_path, verbose_name='Извлеченный текст',
+                                           default='', blank=True)
     
     def save(self, *args, **kwargs):
         # Check does uploaded_file already exist
