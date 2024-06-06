@@ -35,7 +35,7 @@ class UserDocumentForm(forms.ModelForm):
         fields = (
             'document_name',
             'status',
-            'file',
+            'uploaded_file',
         )
 
 

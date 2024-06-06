@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.validators import FileExtensionValidator
 from django.db import models
 
-from .utilities import document_path
+from .utilities import build_document_path, build_document_text_path
 
 
 class UserDocument(models.Model):
@@ -32,16 +32,17 @@ class UserDocument(models.Model):
         ('verification_failed', 'Проверка не пройдена'),
         ('approved', 'Одобрен'),
     ], verbose_name="Статус")
-    file = models.FileField(upload_to=document_path, validators=[
+    uploaded_file = models.FileField(upload_to=build_document_path, validators=[
         FileExtensionValidator(allowed_extensions=['pdf'], message='Выберите файл в формате PDF')
     ], verbose_name="Файл")
+    extracted_text_file = models.FileField(upload_to=build_document_text_path, verbose_name='Извлеченный текст')
     
     def save(self, *args, **kwargs):
-        # Check does file already exist
+        # Check does uploaded_file already exist
         if self.pk:
             old_document = UserDocument.objects.get(pk=self.pk)
-            if old_document.file and old_document.file != self.file:
-                old_file_path = old_document.file.path
+            if old_document.uploaded_file and old_document.uploaded_file != self.uploaded_file:
+                old_file_path = old_document.uploaded_file.path
                 if os.path.isfile(old_file_path):
                     os.remove(old_file_path)
 
@@ -52,8 +53,8 @@ class UserDocument(models.Model):
         self.save(update_fields=('status',))
 
     def update_file(self, file) -> None:
-        self.file = file
-        self.save(update_fields=('file',))
+        self.uploaded_file = file
+        self.save(update_fields=('uploaded_file',))
 
     @classmethod
     def update_status_by_id(cls, document_id: int, status: str):
@@ -74,4 +75,4 @@ class UserDocument(models.Model):
         return document
 
     def get_filename(self):
-        return os.path.basename(self.file.name)
+        return os.path.basename(self.uploaded_file.name)

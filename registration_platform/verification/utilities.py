@@ -1,11 +1,11 @@
 import os
-from datetime import datetime
+from django.conf import settings
 
 
-def document_path(instance, filename):
-    user_id = str(instance.user.id)
+def build_document_path(document, filename):
+    user_id = str(document.user.id)
     user_file_name, extension = filename.split('.')
-    file_basename = str(instance.document_name)
+    file_basename = str(document.document_name)
     return os.path.join(
         'users',
         user_id,
@@ -14,11 +14,10 @@ def document_path(instance, filename):
     )
 
 
-def document_text_path(document):
+def build_document_text_path(document, filename=''):
     user_id = str(document.user.id)
     file_basename = str(document.document_name)
     return os.path.join(
-        'media',
         'users',
         user_id,
         'document_texts',
