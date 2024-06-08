@@ -19,3 +19,5 @@ pytesseract~=0.3
 numpy~=1.24
 opencv-python~=4.9
 pymystem3~=0.2
+pytest~=8.2
+pytest-django~=4.8
