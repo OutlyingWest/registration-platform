@@ -8,24 +8,27 @@ from PIL.Image import Image
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.conf import settings
+from django.core.files import File
+from django.core.files.base import ContentFile
 from pdf2image import convert_from_path
 import pytesseract
 from pytesseract import Output, TesseractError
 from pymystem3 import Mystem
 
 from .models import UserDocument
-from .utilities import document_text_path
+from .utilities import build_document_text_path
+
+
+logger = logging.getLogger(__name__)
 
 
 def verify_document(document_id: int):
-    document = update_document_status(document_id, db_status='in_progress', frontend_status='В обработке')
-    logger = logging.getLogger(__name__)
+    update_document_status(document_id, db_status='in_progress', frontend_status='В обработке')
 
-    recognizer = UserDocumentRecognizer(document, logger)
-    recognizer.recognize()
-    document_txt_path = recognizer.text_path
-    user = document.user
-    is_user_full_name_ok = verify_user_full_name(document_txt_path, user, logger)
+    recognizer = UserDocumentRecognizer(document_id)
+    recognizer.extract_text()
+    verifier = UserFullNameVerifier(document_id)
+    is_user_full_name_ok = verifier.verify()
     if is_user_full_name_ok:
         update_document_status(document_id, db_status='approved', frontend_status='Одобрен')
     else:
@@ -55,32 +58,31 @@ async def document_status_send(user_id: int, document_id: int, new_status: str, 
 
 
 class UserDocumentRecognizer:
-    def __init__(self, document: UserDocument, logger):
-        self.document = document
-        self.logger = logger
-        self.logger.info(f'User: {document.user.id}.'
-                         f' Document: "{document.document_name}". Recognition process is started')
-        self.text_path = self.set_text_path(document)
+    def __init__(self, document_id: int):
+        self.document = UserDocument.objects.get(id=document_id)
+        logger.info(f'User: {self.document.user.id}.'
+                    f' Document: "{self.document.document_name}". Recognition process is started')
+        self.text_path = self.set_text_path(self.document)
         self.page_title = f'# Page:'
         # Path to Tesseract executable, if not in std path
         pytesseract.pytesseract.tesseract_cmd = '/usr/local/bin/tesseract'
         self.poppler_path = '/usr/bin'
 
-    def recognize(self):
+    def extract_text(self):
         # Convert PDF to list of images (per page)
-        images = convert_from_path(self.document.file.path, poppler_path=self.poppler_path)
+        images = convert_from_path(self.document.uploaded_file.path, poppler_path=self.poppler_path)
         try:
             self.recognize_images(images)
         except TesseractError as e:
-            self.logger.debug(f'{e}')
+            logger.debug(f'{e}')
             self.retry(images, rotation_method='haff', tesseract_config='--psm 3 --dpi 300 -l rus')
-        self.logger.info(f'User: {self.document.user.id}.'
-                         f' Document: "{self.document.document_name}". Recognition process ended')
+        logger.info(f'User: {self.document.user.id}.'
+                    f' Document: "{self.document.document_name}". Recognition process ended')
 
     def recognize_images(self, images: list, rotation_method='osd', tesseract_config=''):
         for i, image in enumerate(images):
             current_page_title = f'{self.page_title}{i + 1}'
-            self.logger.info(f'Recognition of "{self.document.document_name}" {current_page_title}...')
+            logger.info(f'Recognition of "{self.document.document_name}" {current_page_title}...')
             if rotation_method == 'osd':
                 image = self.osd_rotate(image)
             elif rotation_method == 'haff':
@@ -89,17 +91,17 @@ class UserDocumentRecognizer:
                 raise AttributeError('Wrong recognize_images() rotation_method')
             raw_text = pytesseract.image_to_string(image, lang='rus', config=tesseract_config)
             cleaned_text = '\n'.join(filter(bool, raw_text.split('\n')))
-            self.logger.debug(f'Document text:\n{cleaned_text}')
+            logger.debug(f'Document text:\n{cleaned_text}')
 
             self.append_text_to_file(current_page_title, cleaned_text)
 
     def osd_rotate(self, image) -> Image:
         orientation = pytesseract.image_to_osd(image, output_type=Output.DICT)
         rotated_image = image.rotate(-orientation['rotate'], expand=True)
-        self.logger.debug(f'{orientation=}')
+        logger.debug(f'{orientation=}')
 
         orientation_rotated = pytesseract.image_to_osd(rotated_image, output_type=Output.DICT)
-        self.logger.debug(f'{orientation_rotated=}')
+        logger.debug(f'{orientation_rotated=}')
         return rotated_image
 
     def haff_rotate(self, image):
@@ -120,7 +122,7 @@ class UserDocumentRecognizer:
         unique, counts = np.unique(angles, return_counts=True)
         most_frequent_angle = unique[np.argmax(counts)]
 
-        self.logger.debug(f'Haff Algorythm: The most frequent angle: {most_frequent_angle} deg.')
+        logger.debug(f'Haff Algorythm: The most frequent angle: {most_frequent_angle} deg.')
         rotated_image = image.rotate(most_frequent_angle + 90)
         return rotated_image
 
@@ -134,46 +136,55 @@ class UserDocumentRecognizer:
 
     @staticmethod
     def set_text_path(document):
-        text_path = document_text_path(document)
-        directory = os.path.dirname(text_path)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        with open(text_path, 'w'):
-            pass
-        return text_path
+        text_path = build_document_text_path(document)
+        media_text_path = os.path.join(settings.MEDIA_ROOT, text_path)
 
+        document.extracted_text_file = ContentFile(b'', name=media_text_path)
+        document.save()
+        return media_text_path
 
-def verify_user_full_name(text_path, user: settings.AUTH_USER_MODEL, logger):
-    with open(text_path, 'r') as f:
-        text = f.read()
-    analyzer = FullNameAnalyser()
-    analysed = analyzer.analyze(text)
-    analyzer.extract_full_name(analysed)
-    fio = analyzer.get_detailed_full_name()
-    logger.debug(f'Extracted {fio=}')
-
-    name_part_statuses = {}
-    for name_part_key, properties in fio.items():
-        name_part = getattr(user, name_part_key)
-        if properties['lexeme'] == name_part.lower():
-            name_part_statuses[name_part] = True
+    def get_text_path(self):
+        if self.text_path:
+            return self.text_path
         else:
-            name_part_statuses[name_part] = False
-
-    is_fio = False
-    if all(name_part_statuses.values()):
-        is_fio = True
-    else:
-        logger.debug(f'{name_part_statuses=}')
-    return is_fio
+            raise ValueError('Text path is empty')
 
 
-class UserDocumentVerifier:
-    def __init__(self):
-        pass
+class UserFullNameVerifier:
+    def __init__(self, document_id: int):
+        self.document = UserDocument.objects.get(id=document_id)
 
-    def get_status(self):
-        pass
+    def verify(self):
+        extracted_full_name = self.extract_full_name()
+        is_full_name_ok = self.compare_extracted_full_name_with_document_owner(extracted_full_name)
+        return is_full_name_ok
+
+    def extract_full_name(self):
+        with open(self.document.extracted_text_file.path, 'r') as f:
+            text = f.read()
+        analyzer = FullNameAnalyser()
+        analysed = analyzer.analyze(text)
+        analyzer.extract_full_name(analysed)
+        extracted_full_name = analyzer.get_detailed_full_name()
+        logger.debug(f'Extracted {extracted_full_name=}')
+        return extracted_full_name
+
+    def compare_extracted_full_name_with_document_owner(self, full_name: dict):
+        user = self.document.user
+        name_part_statuses = {}
+        for name_part_key, properties in full_name.items():
+            name_part = getattr(user, name_part_key)
+            if properties['lexeme'] == name_part.lower():
+                name_part_statuses[name_part] = True
+            else:
+                name_part_statuses[name_part] = False
+
+        is_full_name_ok = False
+        if all(name_part_statuses.values()):
+            is_full_name_ok = True
+        else:
+            logger.debug(f'{name_part_statuses=}')
+        return is_full_name_ok
 
 
 class FullNameAnalyser:
@@ -214,5 +225,3 @@ class FullNameAnalyser:
 
     def get_detailed_full_name(self):
         return self._full_name
-
-
