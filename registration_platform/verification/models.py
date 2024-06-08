@@ -42,12 +42,24 @@ class UserDocument(models.Model):
         # Check does uploaded_file already exist
         if self.pk:
             old_document = UserDocument.objects.get(pk=self.pk)
+            old_file_path = None
+            print(f'From save')
+            print(f'{old_document.extracted_text_file=}')
+            print(f'{self.extracted_text_file=}')
+            if old_document.extracted_text_file and old_document.extracted_text_file != self.extracted_text_file:
+                self.remove_old_file(old_document.extracted_text_file.path)
+
             if old_document.uploaded_file and old_document.uploaded_file != self.uploaded_file:
-                old_file_path = old_document.uploaded_file.path
-                if os.path.isfile(old_file_path):
-                    os.remove(old_file_path)
+                self.remove_old_file(old_document.uploaded_file.path)
 
         super(UserDocument, self).save(*args, **kwargs)
+
+    @staticmethod
+    def remove_old_file(old_file_path):
+        if old_file_path:
+            print(f'{old_file_path=}')
+            if os.path.isfile(old_file_path):
+                os.remove(old_file_path)
 
     def update_status(self, status: str) -> None:
         self.status = status
