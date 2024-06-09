@@ -19,7 +19,7 @@ from pytesseract import Output, TesseractError
 from pymystem3 import Mystem
 from rapidfuzz import fuzz
 
-from .models import UserDocument
+from .models import UserDocument, DocumentStatus
 from .utilities import build_document_text_path
 
 
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 def verify_document(document_id: int):
-    update_document_status(document_id, db_status='in_progress', frontend_status='В обработке')
+    update_document_status(document_id, status=DocumentStatus.IN_PROGRESS)
 
     recognizer = UserDocumentRecognizer(document_id)
     recognizer.extract_text()
@@ -37,27 +37,32 @@ def verify_document(document_id: int):
     speciality_verifier = SpecialityVerifier(document_id)
     is_speciality_ok = speciality_verifier.verify()
     if is_user_full_name_ok and is_speciality_ok:
-        update_document_status(document_id, db_status='approved', frontend_status='Одобрен')
+        update_document_status(document_id, status=DocumentStatus.APPROVED)
     else:
-        update_document_status(document_id, db_status='verification_failed', frontend_status='Проверка не пройдена')
+        update_document_status(document_id, status=DocumentStatus.VERIFICATION_FAILED)
 
 
-def update_document_status(document_id: int, db_status: str, frontend_status: str):
+def update_document_status(document_id: int, status: DocumentStatus):
     """
     Update status in db and send it through WebSocket
     """
+    db_status = status.name
+    frontend_status = status.value
     document = UserDocument.update_status_by_id(document_id, db_status)
     async_to_sync(document_status_send)(document.user.id, document_id, frontend_status)
     return document
 
 
 async def document_status_send(user_id: int, document_id: int, new_status: str, channel_layer=None):
+    """
+    Send status through WebSocket
+    """
     if not channel_layer:
         channel_layer = get_channel_layer()
     await channel_layer.group_send(
-        f'user_{user_id}_document_update',  # Group
+        f'user_{user_id}_document_update',  # Sending group
         {
-            'type': 'document.status.update',  # Method of consumer
+            'type': 'document.status.update',  # Method of Consumer
             'document_id': document_id,
             'new_status': new_status
         }
