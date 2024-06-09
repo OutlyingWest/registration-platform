@@ -12,7 +12,6 @@ import cv2
 import numpy as np
 from PIL.Image import Image
 from asgiref.sync import async_to_sync
-from django.core.files import File
 from pdf2image import convert_from_path
 import pytesseract
 from pytesseract import Output, TesseractError

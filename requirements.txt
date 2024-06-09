@@ -20,3 +20,4 @@ opencv-python~=4.9
 pymystem3~=0.2
 pytest~=8.2
 pytest-django~=4.8
+rapidfuzz~=3.9
