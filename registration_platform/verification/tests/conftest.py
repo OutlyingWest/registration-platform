@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 
 from verification.utilities import build_document_text_path
-from verification.services import UserDocumentRecognizer
+from verification.services import UserDocumentRecognizer, SpecialityVerifier
 from verification.models import UserDocument
 
 
@@ -43,3 +43,24 @@ def remove_text_file_path_after(document):
     media_text_path = os.path.join(settings.MEDIA_ROOT, text_path)
     yield media_text_path
     os.remove(media_text_path)
+
+
+@pytest.fixture
+def specialities(document):
+    verifier = SpecialityVerifier(document.id)
+    specs = verifier.load_specialities()
+    return specs
+
+
+@pytest.fixture
+def extracted_text(document):
+    text_path = UserDocumentRecognizer.set_text_path(document)
+    load_text = [
+        'Наименование учебных предметов\n',
+        'Итоговая отметка\n',
+        'Ядерная энергетика и теплофизика\n',
+    ]
+    with open(text_path, 'w') as f:
+        f.writelines(load_text)
+    expected_text = [line.strip() for line in load_text]
+    return text_path, expected_text
