@@ -1,4 +1,5 @@
 import os
+from enum import Enum
 
 from channels.db import database_sync_to_async
 from django.conf import settings
@@ -8,30 +9,49 @@ from django.db import models
 from .utilities import build_document_path, build_document_text_path
 
 
-class UserDocument(models.Model):
-    DOCUMENT_TYPES = [
-        ('snils', 'СНИЛС'),
-        ('passport', 'Паспорт'),
-        ('name_change', 'Документ о перемене имени'),
-        ('marriage_or_divorce', 'Документ о заключении или расторжении брака'),
-        ('other_document_1', 'Иной документ 1'),
-        ('bachelors_diploma', 'Диплом бакалавра'),
-        ('masters_diploma', 'Диплом магистра'),
-        ('employment_history', 'Трудовая книжка'),
-        ('advanced_training_certificate', 'Сертификат о повышении квалификации'),
-        ('other_document_2', 'Иной документ 2'),
-        ('nrs', 'НРС'),
-        ('data_processing_agreement', 'Согласие на обработку данных')
-    ]
+class DocumentType(Enum):
+    SNILS = 'СНИЛС'
+    PASSPORT = 'Паспорт'
+    NAME_CHANGE = 'Документ о перемене имени'
+    MARRIAGE_OR_DIVORCE = 'Документ о заключении или расторжении брака'
+    OTHER_DOCUMENT_1 = 'Иной документ 1'
+    BACHELORS_DIPLOMA = 'Диплом бакалавра'
+    MASTERS_DIPLOMA = 'Диплом магистра'
+    EMPLOYMENT_HISTORY = 'Трудовая книжка'
+    ADVANCED_TRAINING_CERTIFICATE = 'Сертификат о повышении квалификации'
+    OTHER_DOCUMENT_2 = 'Иной документ 2'
+    NRS = 'НРС'
+    DATA_PROCESSING_AGREEMENT = 'Согласие на обработку данных'
 
+    @property
+    def name(self):
+        return self._name_.lower()
+
+    @classmethod
+    def choices(cls):
+        return [(status.name, status.value) for status in cls]
+
+
+class DocumentStatus(Enum):
+    NOT_UPLOADED = 'Не загружен'
+    IN_PROGRESS = 'В обработке'
+    VERIFICATION_FAILED = 'Проверка не пройдена'
+    APPROVED = 'Одобрен'
+
+    @property
+    def name(self):
+        return self._name_.lower()
+
+    @classmethod
+    def choices(cls):
+        return [(status.name, status.value) for status in cls]
+
+
+class UserDocument(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='documents')
-    document_name = models.CharField(max_length=100, choices=DOCUMENT_TYPES, verbose_name="Тип документа")
-    status = models.CharField(max_length=20, default='not_uploaded', choices=[
-        ('not_uploaded', 'Не загружен'),
-        ('in_progress', 'В обработке'),
-        ('verification_failed', 'Проверка не пройдена'),
-        ('approved', 'Одобрен'),
-    ], verbose_name="Статус")
+    document_name = models.CharField(max_length=100, choices=DocumentType.choices(), verbose_name="Тип документа")
+    status = models.CharField(max_length=20, default='not_uploaded', choices=DocumentStatus.choices(),
+                              verbose_name="Статус")
     uploaded_file = models.FileField(upload_to=build_document_path, validators=[
         FileExtensionValidator(allowed_extensions=['pdf'], message='Выберите файл в формате PDF')
     ], verbose_name="Файл", blank=True, default='')
