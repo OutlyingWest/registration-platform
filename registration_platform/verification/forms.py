@@ -10,8 +10,8 @@ class UserProfileForm(forms.ModelForm):
         model = get_user_model()
         fields = (
             'avatar',
-            'first_name',
             'last_name',
+            'first_name',
             'patronymic',
             'gender',
             'birthday',

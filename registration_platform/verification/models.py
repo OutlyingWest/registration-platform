@@ -57,7 +57,11 @@ class UserDocument(models.Model):
     ], verbose_name="Файл", blank=True, default='')
     extracted_text_file = models.FileField(upload_to=build_document_text_path, verbose_name='Извлеченный текст',
                                            default='', blank=True)
-    
+
+    class Meta:
+        verbose_name = 'Документ'
+        verbose_name_plural = 'Документы'
+
     def save(self, *args, **kwargs):
         # Check does uploaded_file already exist
         if self.pk:

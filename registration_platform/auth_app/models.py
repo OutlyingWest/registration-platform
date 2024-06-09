@@ -2,6 +2,7 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.validators import FileExtensionValidator, RegexValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.urls import reverse
 
 from .utilities import file_path
 
@@ -46,6 +47,9 @@ class User(AbstractUser):
 
     def natural_key(self):
         return self.get_full_name()
+
+    def get_absolute_url(self):
+        return reverse('account', kwargs={'user_id': self.pk})
 
     def __str__(self):
         return f'Участник {self.first_name} {self.last_name}: {self.email}'

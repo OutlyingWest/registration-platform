@@ -1,3 +1,11 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import UserDocument
+
+
+class UserDocumentsInline(admin.TabularInline):
+    model = UserDocument
+    extra = 0
+
+
+admin.site.register(UserDocument)
