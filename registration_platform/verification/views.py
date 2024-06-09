@@ -13,6 +13,7 @@ from .tasks import verify_document_task
 
 class UserAccountView(LoginRequiredMixin, View):
     template_name = 'account.html'
+    pk_url_kwarg = 'user_id'
 
     def get(self, request, *args, **kwargs):
         user_profile_form = UserProfileForm(instance=request.user)
@@ -27,13 +28,17 @@ class UserAccountView(LoginRequiredMixin, View):
 
         if user_profile_form.is_valid():
             user_profile_form.save()
-            return redirect(reverse('account'))
-
+            return redirect(self.get_success_url())
+        # TODO maby should be removed
         user_documents = UserDocument.objects.filter(user=request.user)
         return render(request, self.template_name, {
             'user_profile_form': user_profile_form,
             'user_documents': user_documents,
         })
+
+    def get_success_url(self):
+        user_id = self.request.user.pk
+        return reverse('account', kwargs={'user_id': user_id})
 
 
 class UserDocumentUploadView(LoginRequiredMixin, View):
