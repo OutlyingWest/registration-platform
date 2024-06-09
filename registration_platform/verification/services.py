@@ -1,19 +1,23 @@
+import csv
 import os
 import time
 import logging
+from enum import Enum
+
+from django.conf import settings
+from channels.layers import get_channel_layer
+from django.core.files.base import ContentFile
 
 import cv2
 import numpy as np
 from PIL.Image import Image
 from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-from django.conf import settings
 from django.core.files import File
-from django.core.files.base import ContentFile
 from pdf2image import convert_from_path
 import pytesseract
 from pytesseract import Output, TesseractError
 from pymystem3 import Mystem
+from rapidfuzz import fuzz
 
 from .models import UserDocument
 from .utilities import build_document_text_path
@@ -27,9 +31,12 @@ def verify_document(document_id: int):
 
     recognizer = UserDocumentRecognizer(document_id)
     recognizer.extract_text()
-    verifier = UserFullNameVerifier(document_id)
-    is_user_full_name_ok = verifier.verify()
-    if is_user_full_name_ok:
+    full_name_verifier = UserFullNameVerifier(document_id)
+    is_user_full_name_ok = full_name_verifier.verify()
+
+    speciality_verifier = SpecialityVerifier(document_id)
+    is_speciality_ok = speciality_verifier.verify()
+    if is_user_full_name_ok and is_speciality_ok:
         update_document_status(document_id, db_status='approved', frontend_status='Одобрен')
     else:
         update_document_status(document_id, db_status='verification_failed', frontend_status='Проверка не пройдена')
@@ -150,11 +157,61 @@ class UserDocumentRecognizer:
             raise ValueError('Text path is empty')
 
 
-class UserFullNameVerifier:
+class VerificationRequirement(Enum):
+    FULL_NAME = 'full name'
+    SPECIALITY = 'speciality'
+    GENDER = 'gender'
+    DATE_OF_BIRTH = 'date of birth'
+    DEFAULT = None
+
+
+class DocumentVerifier:
+    requirement = VerificationRequirement.DEFAULT
+
     def __init__(self, document_id: int):
         self.document = UserDocument.objects.get(id=document_id)
 
-    def verify(self):
+    def verify(self) -> bool:
+        if self.pre_verify():
+            return True
+        return self.post_verify()
+
+    def pre_verify(self) -> bool:
+        current_requirements = self.get_current_requirements()
+        logger.debug(f'{self.requirement.value = }')
+        logger.debug(f'{current_requirements = }')
+        if self.requirement.value in current_requirements:
+            logger.debug(f'pre_verify return False')
+            return False
+        else:
+            logger.debug(f'pre_verify return True')
+            return True
+
+    def post_verify(self) -> bool:
+        return False
+
+    def get_current_requirements(self) -> list:
+        all_requirements = self._load_requirements()
+        current_requirements = all_requirements[self.document.document_name]
+        logger.debug(f'{all_requirements=}')
+        return current_requirements
+
+    @staticmethod
+    def _load_requirements() -> dict:
+        requirements_path = os.path.join(settings.MEDIA_ROOT, 'recourses', 'verification_requirements.csv')
+        with open(requirements_path, 'r') as f:
+            reader = csv.reader(f, delimiter=';')
+            requirements = {document_name: requirements for document_name, *requirements in reader}
+        return requirements
+
+
+class UserFullNameVerifier(DocumentVerifier):
+    requirement = VerificationRequirement.FULL_NAME
+
+    def __init__(self, document_id: int):
+        super().__init__(document_id)
+
+    def post_verify(self):
         extracted_full_name = self.extract_full_name()
         is_full_name_ok = self.compare_extracted_full_name_with_document_owner(extracted_full_name)
         return is_full_name_ok
@@ -225,3 +282,60 @@ class FullNameAnalyser:
 
     def get_detailed_full_name(self):
         return self._full_name
+
+
+class SpecialityCol(Enum):
+    NUMBER = 0
+    CODE = 1
+    NAME = 2
+
+
+class SpecialityVerifier(DocumentVerifier):
+    requirement = VerificationRequirement.SPECIALITY
+
+    def __init__(self, document_id: int):
+        super().__init__(document_id)
+        self.text = self.load_extracted_text(self.document.extracted_text_file.path)
+        self.specialities = self.load_specialities()
+        logger.debug(f'SpecialityVerifier: {self.text=}')
+
+    def post_verify(self) -> bool:
+        score_key = 2
+        specialities = self.find_specialities_in_text()
+        logger.debug(f'Most probable {specialities = }')
+        if specialities:
+            most_probable_speciality_name = max(specialities, key=lambda spec: spec[score_key])
+            if most_probable_speciality_name:
+                logger.debug(f'Most probable {most_probable_speciality_name = }')
+                return True
+        return False
+
+    @staticmethod
+    def load_specialities() -> list:
+        spec_path = os.path.join(settings.MEDIA_ROOT, 'recourses', 'specialities.csv')
+        with open(spec_path, 'r') as f:
+            reader = csv.reader(f, delimiter=';')
+            specialities = [row for row in reader]
+        return specialities
+
+    @staticmethod
+    def load_extracted_text(path: os.PathLike) -> list:
+        with open(path, 'r') as f:
+            text = f.readlines()
+        clean_text = [line.strip() for line in text]
+        return clean_text
+
+    def find_specialities_in_text(self, threshold=80) -> list:
+        """
+        Returns the list of the most probable specialities in text in format:
+        (Found Spec. in text, Spec. from specialities.csv, Match score)
+        :param threshold:
+        """
+        spec_names = [spec[SpecialityCol.NAME.value] for spec in self.specialities]
+        closest_results = []
+        for text_line in self.text:
+            for spec in spec_names:
+                match_score = fuzz.partial_ratio(text_line, spec)
+                if match_score >= threshold:
+                    closest_results.append((text_line, spec, match_score))
+        return closest_results
