@@ -120,6 +120,9 @@ registration_platform/static/*.js
 registration_platform/static/*.css
 registration_platform/static_production
 
+# Ignore test data
+registration_platform/verification/tests/data
+
 # Ignore gunicorn config
 config/
 

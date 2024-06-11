@@ -7,7 +7,7 @@ import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
-from verification.utilities import build_document_text_path
+from verification.utilities import build_document_text_path, build_document_path
 from verification.services import UserDocumentRecognizer, SpecialityVerifier
 from verification.models import UserDocument
 
@@ -36,6 +36,14 @@ def user(db):
 def document(db, user):
     return UserDocument.objects.filter(user=user.id).first()
 
+@pytest.fixture
+def remove_uploaded_file_path_after(document, document_name_arg):
+    if document_name_arg == 'not_document':
+        return
+    document_path = build_document_path(document, f'{document_name_arg}.pdf')
+    media_document_path = os.path.join(settings.MEDIA_ROOT, document_path)
+    yield media_document_path
+    os.remove(media_document_path)
 
 @pytest.fixture
 def remove_text_file_path_after(document):
@@ -64,3 +72,12 @@ def extracted_text(document):
         f.writelines(load_text)
     expected_text = [line.strip() for line in load_text]
     return text_path, expected_text
+
+
+def pytest_addoption(parser):
+    parser.addoption('--document', action='store', default='not_document', help='Document name')
+
+
+@pytest.fixture
+def document_name_arg(request):
+    return request.config.getoption('--document')
