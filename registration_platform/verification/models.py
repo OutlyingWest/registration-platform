@@ -9,7 +9,7 @@ from django.db import models
 from .utilities import build_document_path, build_document_text_path
 
 
-class DocumentType(Enum):
+class DocumentName(Enum):
     SNILS = 'СНИЛС'
     PASSPORT = 'Паспорт'
     NAME_CHANGE = 'Документ о перемене имени'
@@ -29,7 +29,11 @@ class DocumentType(Enum):
 
     @classmethod
     def choices(cls):
-        return [(status.name, status.value) for status in cls]
+        return [(document_type.name, document_type.value) for document_type in cls]
+
+    @classmethod
+    def get_names(cls):
+        return [document_type.name for document_type in cls]
 
 
 class DocumentStatus(Enum):
@@ -49,7 +53,7 @@ class DocumentStatus(Enum):
 
 class UserDocument(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='documents')
-    document_name = models.CharField(max_length=100, choices=DocumentType.choices(), verbose_name="Тип документа")
+    document_name = models.CharField(max_length=100, choices=DocumentName.choices(), verbose_name="Тип документа")
     status = models.CharField(max_length=20, default='not_uploaded', choices=DocumentStatus.choices(),
                               verbose_name="Статус")
     uploaded_file = models.FileField(upload_to=build_document_path, validators=[

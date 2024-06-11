@@ -149,7 +149,6 @@ class UserDocumentRecognizer:
     def set_text_path(document):
         text_path = build_document_text_path(document)
         media_text_path = os.path.join(settings.MEDIA_ROOT, text_path)
-
         document.extracted_text_file = ContentFile(b'', name=media_text_path)
         document.save()
         return media_text_path
